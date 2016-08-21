@@ -88,22 +88,29 @@ def search_task():
 def search_database(filter, minutes=0, keyword="", employee=""):
 	if filter == 'date':
 		entries = Entry.select().order_by('date')
+		count = 1
 		for entry in entries:
-			print(entry)
+			print(str(count) + ") " + str(entry.date))
+			count += 1
 
 	elif filter == 'minutes':
-		entries = Entry.select(time=minutes)
+		entries = Entry.select().where(Entry.time == minutes)
+		count = 1
 		for entry in entries:
-			print(entry)
+			print(str(count) + ') ' + entry)
+			count += 1
 
 	elif filter == 'keyword':
-		entries = Entry.select(Q(title_icontains=keyword)|Q(notes_icontains=keyword))
+		entries = Entry.select().where(Entry.title.contains(keyword) | Entry.notes.contains(keyword))
+		count = 1
 		for entry in entries:
-			print(entry)
+			print(str(count) + ") " + entry)
+			count += 1
 
 	elif filter == 'employee':
-		entries = Entry.select(employee=employee)
+		entries = Entry.select().where(Entry.employee == employee)
+		count = 1
 		for entry in entries:
-			print(entries)
+			print(str(count) + ") " + entry)
 
 work_log()
