@@ -7,7 +7,8 @@ db = SqliteDatabase('entries.db')
 
 class Entry(Model):
 	employee = CharField(max_length=255)
-	date = DateTimeField(auto_now_add=True)
+	title = CharField(max_length=255)
+	date = DateTimeField()
 	time = IntegerField(default=0)
 	notes = TextField()
 
@@ -89,25 +90,6 @@ def print_csv(filter, minutes=0, keyword="", regex=""):
 			print('')
 			print(entries[entry][3])
 
-def write_csv_header():
-	with open('tasks.csv', 'a') as csvfile:
-		fieldnames = ['date', 'name', 'minutes', 'notes']
-		taskwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-		taskwriter.writeheader()
-
-def write_csv(name, minutes, notes):
-	with open('tasks.csv', 'a') as csvfile:
-		fieldnames = ['date', 'name', 'minutes', 'notes']
-		taskwriter = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-		taskwriter.writerow({
-			'date': datetime.datetime.now(),
-			'name': name,
-			'minutes': minutes,
-			'notes': notes
-		})
-
 def work_log():
 	while True:
 		user_input = input("Would you like to create a new entry(c), or look up old ones(L) c/L ? ")
@@ -121,13 +103,16 @@ def work_log():
 			print("That is not a valid response")
 
 def create_new_task():
+	employee = input("Enter employee name: ")
 	task_name = input("Enter a task name: ")
 	minutes_spent = input("Enter minutes spent on task: ")
 	notes = input("Enter any additional notes about the task: ")
+
 	while True:
 		save = input("Would you like to save your entry, or start over? Y/n")
 		if save == 'Y':
-			write_csv(task_name, minutes_spent, notes)
+			Entry.create(employee=employee, title=task_name, 
+								time=minutes_spent, notes=notes, date=datetime.datetime.now())
 			while True:
 				create_more = input("Would you like to add another entry? Y/n")
 				if create_more == 'Y':
