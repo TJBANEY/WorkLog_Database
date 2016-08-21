@@ -12,83 +12,15 @@ class Entry(Model):
 	time = IntegerField(default=0)
 	notes = TextField()
 
+	def __str__(self):
+		return "{}: {} - {}".format(self.date, self.employee, self.title)
+
 	class Meta:
 		database = db
 
 if __name__ == '__main__':
 	db.connect()
 	db.create_tables([Entry], safe=True)
-
-def print_csv(filter, minutes=0, keyword="", regex=""):
-	with open('tasks.csv', newline='') as csvfile:
-		task_reader = csv.reader(csvfile, delimiter=",")
-		rows = list(task_reader)
-		if filter == 'date':
-			count = 1
-			entries = []
-			for row in rows:
-				print(str(count) + ') ' + row[0] + ' - ' + row[1])
-				entries.append([row[0], row[1], row[2], row[3]])
-				count += 1
-			entry = input("Choose an entry by number or press 'q' to quit: ")
-			entry = int(entry) - 1
-			print('Task Name: ' + entries[entry][1])
-			print('Date Created: ' + entries[entry][0])
-			print('Time Taken: ' + entries[entry][2])
-			print('')
-			print(entries[entry][3])
-
-		elif filter == 'minutes':
-			count = 1
-			entries = []
-			for row in rows:
-				if row[2] == str(minutes):
-					print(str(count) + ') ' + row[2] + 'min - ' + row[1])
-					entries.append([row[0], row[1], row[2], row[3]])
-					count += 1
-			entry = input("Choose an entry by number or press 'q' to quit: ")
-			entry = int(entry) - 1
-			print('Task Name: ' + entries[entry][1])
-			print('Date Created: ' + entries[entry][0])
-			print('Time Taken: ' + entries[entry][2])
-			print('')
-			print(entries[entry][3])
-
-		elif filter == 'keyword':
-			count = 1
-			entries = []
-			for row in rows:
-				note_list = row[3].split(" ")
-				name_list = row[1].split(" ")
-				if keyword in note_list or keyword in name_list:
-					print(str(count) + ') ' + row[0] + ' ' + row[1] + ' ' + row[3])
-					entries.append([row[0], row[1], row[2], row[3]])
-					count += 1
-			entry = input("Choose an entry by number or press 'q' to quit: ")
-			entry = int(entry) - 1
-			print('Task Name: ' + entries[entry][1])
-			print('Date Created: ' + entries[entry][0])
-			print('Time Taken: ' + entries[entry][2])
-			print('')
-			print(entries[entry][3])
-
-		elif filter == 'pattern':
-			count = 1
-			entries = []
-			for row in rows:
-				name_results = re.match(r'' + regex + '', row[1])
-				note_results = re.search(r'' + regex +'', row[3])
-				if name_results != None or note_results != None:
-					print(str(count) + ') ' + row[0] + ' ' + row[1] + ' ' + row[3])
-					entries.append([row[0], row[1], row[2], row[3]])
-					count += 1
-			entry = input("Choose an entry by number or press 'q' to quit: ")
-			entry = int(entry) - 1
-			print('Task Name: ' + entries[entry][1])
-			print('Date Created: ' + entries[entry][0])
-			print('Time Taken: ' + entries[entry][2])
-			print('')
-			print(entries[entry][3])
 
 def work_log():
 	while True:
@@ -125,14 +57,15 @@ def create_new_task():
 
 def search_task():
 	while True:
-		search_filter = input("Search for tasks by date(d), time spent on task(t), pattern(p), or keyword search(k): ")
-		if search_filter not in ['d','t','p','k']:
+		search_filter = input("Search for tasks by date(d), time spent on task(t), keyword search(k), or by employee(e): ")
+		if search_filter not in ['d','t','e','k']:
 			print("Not a valid selection")
 		else:
 			break
 
 	if search_filter == 'd':
-		print_csv('date')
+		search_database(filter='date')
+
 	elif search_filter == 't':
 		while True:
 			minutes = input("enter minutes: ")
@@ -142,13 +75,35 @@ def search_task():
 				print("Please enter a valid number.")
 			else:
 				break
-		print_csv('minutes', int(minutes), '', '')
+		search_database(filter='minutes', minutes=minutes)
 
-	elif search_filter == 'p':
-		reg_ex = input("Enter regular expression to search by: ")
-		print_csv('pattern', 0, '', reg_ex)
+	elif search_filter == 'e':
+		employee = input("Enter employee name: ")
+		search_database(filter='employee', employee=employee)
+
 	elif search_filter == 'k':
 		keyword = input("Enter a word you'd like to search by: ")
-		print_csv('keyword', 0, keyword, '')
+		search_database(filter='keyword', keyword=keyword)
+
+def search_database(filter, minutes=0, keyword="", employee=""):
+	if filter == 'date':
+		entries = Entry.select().order_by('date')
+		for entry in entries:
+			print(entry)
+
+	elif filter == 'minutes':
+		entries = Entry.select(time=minutes)
+		for entry in entries:
+			print(entry)
+
+	elif filter == 'keyword':
+		entries = Entry.select(Q(title_icontains=keyword)|Q(notes_icontains=keyword))
+		for entry in entries:
+			print(entry)
+
+	elif filter == 'employee':
+		entries = Entry.select(employee=employee)
+		for entry in entries:
+			print(entries)
 
 work_log()
