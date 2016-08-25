@@ -6,11 +6,11 @@ from peewee import *
 db = SqliteDatabase('entries.db')
 
 class Entry(Model):
-	employee = CharField(max_length=255)
-	title = CharField(max_length=255)
-	date = DateTimeField()
-	time = IntegerField(default=0)
-	notes = TextField()
+	employee = CharField(max_length=255, null=True)
+	title = CharField(max_length=255, null=True)
+	date = DateTimeField(null=True)
+	time = IntegerField(default=0, null=True)
+	notes = TextField(null=True)
 
 	def __str__(self):
 		return "{}: {} - {}".format(self.date, self.employee, self.title)
@@ -113,4 +113,4 @@ def search_database(filter, minutes=0, keyword="", employee=""):
 		for entry in entries:
 			print(str(count) + ") " + entry)
 
-work_log()
+# work_log()
